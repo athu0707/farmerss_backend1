@@ -1,0 +1,10 @@
+
+
+Flask
+Flask-Login
+python-dotenv
+pandas
+scikit-learn
+joblib
+requests
+mysql-connector-python
