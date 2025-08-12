@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroPredict | Crop Insights</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto+Slab:wght@300;400&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #388E3C;
+            --accent: #8BC34A;
+            --dark: #2E7D32;
+            --light: #C8E6C9;
+            --text: #333;
+            --white: #fff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        .subtitle {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.1rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .form-container {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .form-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f9f9f9;
+        }
+        
+        input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.2);
+            background-color: var(--white);
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, var(--secondary), var(--dark));
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .crop-icon {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .crop-icon i {
+            font-size: 3rem;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+        
+        .floating-leaves {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .leaf {
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+            }
+        }
+        
+        .results {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .result-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .suggestions {
+            margin-top: 1rem;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header animate__animated animate__fadeInDown">
+            <div class="crop-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v20M16 2v20M3 10h18M3 6h18M3 14h18M3 18h18"/>
+                </svg>
+            </div>
+            <h1>AgroPredict Insights</h1>
+            <p class="subtitle">Get accurate price and demand forecasts for your crops</p>
+        </div>
+        
+        <div class="form-container animate__animated animate__fadeInUp">
+            <form method="POST" id="predictionForm">
+                <div class="form-group">
+                    <label for="crop_name">Select Crop</label>
+                    <input type="text" id="crop_name" name="crop_name" list="crops" placeholder="e.g. Wheat, Rice, Corn..." required>
+                    <datalist id="crops">
+                        <option value="Wheat">
+                        <option value="Rice">
+                        <option value="Corn">
+                        <option value="Soybean">
+                        <option value="Potato">
+                        <option value="Tomato">
+                        <option value="Cotton">
+                        <option value="Sugar Cane">
+                    </datalist>
+                </div>
+                <button type="submit" id="predictBtn">Generate Insights</button>
+            </form>
+        </div>
+        
+        <div class="results" id="results">
+            <h3>Prediction Results for <span id="cropDisplay"></span></h3>
+            <div class="result-item">
+                <span class="result-label">Expected Price:</span>
+                <span class="result-value" id="priceResult">$0.00/kg</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Demand Forecast:</span>
+                <span class="result-value" id="demandResult">Medium</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Best Planting Season:</span>
+                <span class="result-value" id="seasonResult">Spring</span>
+            </div>
+            <div class="suggestions" id="suggestions">
+                Based on current market trends, we recommend monitoring prices closely for optimal selling time.
+            </div>
+        </div>
+    </div>
+    
+    <div class="floating-leaves" id="leavesContainer"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Create floating leaves
+        function createLeaves() {
+            const container = document.getElementById('leavesContainer');
+            const leafCount = 12;
+            const leafTypes = 3;
+            
+            for (let i = 0; i < leafCount; i++) {
+                const leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                
+                // Random leaf type
+                const leafType = Math.floor(Math.random() * leafTypes) + 1;
+                leaf.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="${i % 2 === 0 ? '#4CAF50' : '#8BC34A'}"><path d="M50 0 Q70 30 50 60 Q30 30 50 0" /></svg>')`;
+                
+                // Random size
+                const size = Math.random() * 30 + 20;
+                leaf.style.width = `${size}px`;
+                leaf.style.height = `${size}px`;
+                
+                // Random position
+                leaf.style.left = `${Math.random() * 100}%`;
+                leaf.style.bottom = `-${size}px`;
+                
+                // Random animation duration and delay
+                const duration = Math.random() * 10 + 10;
+                const delay = Math.random() * 5;
+                leaf.style.animationDuration = `${duration}s`;
+                leaf.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(leaf);
+            }
+        }
+        
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', function(e) 
+        {
+            e.preventDefault();
+            
+            const cropName = document.getElementById('crop_name').value;
+            if (!cropName) return;
+            
+            // Show loading state
+            const btn = document.getElementById('predictBtn');
+            btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+            btn.disabled = true;
+            
+            // Simulate API call (replace with actual fetch to your backend)
+            fetch('/predict',
+            {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ crop_name: cropName })
+            })
+            .then(response => response.json())
+        .then(data => {
+            document.getElementById('cropDisplay').textContent = cropName;
+            document.getElementById('priceResult').textContent = `${data.price}/10kg`;
+            document.getElementById('demandResult').textContent = data.demand;
+            document.getElementById('seasonResult').textContent = data.season;
+
+            document.getElementById('results').style.display = 'block';
+            btn.innerHTML = 'Generate Insights';
+            btn.disabled = false;
+
+            createTrendChart(
+            data.chart_data.months,
+            data.chart_data.price_data,
+            data.chart_data.demand_data
+);
+
+        })
+        .catch(error => {
+        console.error('Prediction failed:', error);
+        btn.innerHTML = 'Generate Insights';
+        btn.disabled = false;
+        });
+
+        });
+    // function to create trend chart    
+        function createTrendChart(months, priceData, demandData) {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'trendChart';
+        const resultsDiv = document.getElementById('results');
+
+        const existingChart = document.getElementById('trendChart');
+        if (existingChart) existingChart.remove();
+
+        resultsDiv.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Price ($/kg)',
+                        data: priceData,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Demand Index',
+                        data: demandData,
+                        borderColor: '#8BC34A',
+                        backgroundColor: 'rgba(139, 195, 74, 0.1)',
+                        borderWidth: 2,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '12-Month Price & Demand Trend'
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Price ($/kg)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Demand Index'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+        
+        // Initialize on load
+        window.addEventListener('load', function() {
+            createLeaves();
+            
+            // Add animation to form elements
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
