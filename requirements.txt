@@ -1,10 +1,10 @@
-
-
 Flask
 Flask-Login
-python-dotenv
-pandas
-scikit-learn
+gunicorn
 joblib
-requests
 mysql-connector-python
+pandas
+python-dotenv
+requests
+scikit-learn
+beautifulsoup4
