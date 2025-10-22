@@ -1,0 +1,30 @@
+{% extends "dashboard.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>My Active Crops</h2>
+    {% if crops %}
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Crop Name</th>
+                    <th>Quantity</th>
+                    <th>Planted Date</th>
+                    <th>Expected Harvest</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for crop in crops %}
+                <tr>
+                    <td>{{ crop.name }}</td>
+                    <td>{{ crop.quantity }}</td>
+                    <td>{{ crop.planted_date }}</td>
+                    <td>{{ crop.harvest_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="mt-3 text-muted">No crops found.</p>
+    {% endif %}
+</div>
+{% endblock %}
