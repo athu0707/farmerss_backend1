@@ -20,7 +20,8 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
-@l@login_manager.user_loader
+# ---------------- USER LOADER (Fixed Decorator) ----------------
+@login_manager.user_loader
 def load_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -31,8 +32,6 @@ def load_user(user_id):
         id, username, role = row
         return User(id=id, username=username, role=role)
     return None
-
-
 
 
 # ----------------- PIB Farmer News Function -----------------
@@ -48,7 +47,6 @@ def get_farmer_news():
     soup = BeautifulSoup(response.text, "html.parser")
     news_list = []
 
-    # Try multiple selectors for safety
     selectors = [
         "ul.pressRelease li a",
         ".prlink a",
@@ -71,27 +69,27 @@ def get_farmer_news():
             break
 
     return news_list
-# ------------------------------------------------------------
 
 
+# ---------------- WEATHER API ----------------
 def get_weather(city):
-    """Fetch weather data from OpenWeatherMap"""
     API_KEY = os.getenv("OPENWEATHERMAP_API_KEY")
     if not API_KEY:
         return None
-        
+
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+
     try:
         response = requests.get(url)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Weather API Error: {e}")
+    except Exception as e:
+        print("Weather API Error:", e)
         return None
 
 
+# ---------------- CROP PRICE API ----------------
 def get_crop_price(crop_name, state="haryana", district="gurgaon"):
-    """Fetch crop price data from AGMARKNET"""
     API_KEY = os.getenv("AGMARKNET_API_KEY")
     if not API_KEY:
         return None, None, None
@@ -110,17 +108,17 @@ def get_crop_price(crop_name, state="haryana", district="gurgaon"):
         response = requests.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-        
-        if data.get("total", 0) > 0 and data.get("records"):
-            record = data['records'][0]
-            min_price = float(record.get('min_price', 0)) / 100
-            max_price = float(record.get('max_price', 0)) / 100
-            modal_price = float(record.get('modal_price', 0)) / 100
+
+        if data.get("total", 0) > 0:
+            record = data["records"][0]
+            min_price = float(record.get("min_price", 0)) / 100
+            max_price = float(record.get("max_price", 0)) / 100
+            modal_price = float(record.get("modal_price", 0)) / 100
             return min_price, max_price, modal_price
-            
+
         return None, None, None
     except Exception as e:
-        print(f"Price API Error: {e}")
+        print("Price API Error:", e)
         return None, None, None
 
 
@@ -129,34 +127,37 @@ def get_crop_price(crop_name, state="haryana", district="gurgaon"):
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"]
+        password = request.form["password"]
         user = verify_user(username, password)
+
         if user:
             login_user(user)
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
-        flash('Invalid username or password', 'error')
-    return render_template('login.html')
+            flash("Login successful!", "success")
+            return redirect(url_for("dashboard"))
+        flash("Invalid username or password", "error")
+
+    return render_template("login.html")
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        role = request.form.get('role', 'farmer')  # Default role
-        
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        role = request.form.get("role", "farmer")
+
         if get_user_by_username(username):
-            flash('Username already exists', 'error')
+            flash("Username already exists", "error")
         else:
             register_user(username, password, role)
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('login'))
-    return render_template('register.html')
+            flash("Registration successful! Please log in.", "success")
+            return redirect(url_for("login"))
+
+    return render_template("register.html")
 
 
-@app.route('/dashboard')
+@app.route("/dashboard")
 @login_required
 def dashboard():
     conn = get_db_connection()
@@ -166,47 +167,39 @@ def dashboard():
     conn.close()
 
     current_date = datetime.now().strftime("%B %d, %Y")
-
-    # Get PIB Farmer News
     farm_news = get_farmer_news()
-    
 
-    return render_template('dashboard.html', 
-                         user=current_user,
-                         current_date=current_date,
-                         active_crop_count=active_crop_count,
-                         farm_news=farm_news)
-    farm_news = [
-        {"title": "Govt launches new crop insurance scheme", "link": "#"},
-        {"title": "New subsidies announced for organic farming", "link": "#"},
-        {"title": "Farmer training programs to start next month", "link": "#"},
-    ]
+    return render_template(
+        "dashboard.html",
+        user=current_user,
+        current_date=current_date,
+        active_crop_count=active_crop_count,
+        farm_news=farm_news
+    )
 
 
-
-@app.route('/predict', methods=['GET', 'POST'])
+@app.route("/predict", methods=["GET", "POST"])
 @login_required
 def predict():
-    if request.method == 'POST':
-        crop_name = request.form['crop_name']
-        city = request.form.get('city', 'Ahmednagar')
+    if request.method == "POST":
+        crop_name = request.form["crop_name"]
+        city = request.form.get("city", "Ahmednagar")
 
         weather_data = get_weather(city)
         weather_info = {
-            'description': weather_data['weather'][0]['description'] if weather_data else 'N/A',
-            'temperature': weather_data['main']['temp'] if weather_data else 'N/A',
-            'humidity': weather_data['main']['humidity'] if weather_data else 'N/A'
+            "description": weather_data["weather"][0]["description"] if weather_data else "N/A",
+            "temperature": weather_data["main"]["temp"] if weather_data else "N/A",
+            "humidity": weather_data["main"]["humidity"] if weather_data else "N/A",
         }
 
         min_price, max_price, modal_price = get_crop_price(crop_name)
-
         predicted_price = predict_crop_price(crop_name)
-        predicted_demand = None  # Placeholder
 
-        return render_template('results.html',
+        return render_template(
+            "results.html",
             crop_name=crop_name,
             predicted_price=predicted_price or "N/A",
-            predicted_demand=predicted_demand or "N/A",
+            predicted_demand="N/A",
             weather=weather_info,
             min_price=min_price or "N/A",
             max_price=max_price or "N/A",
@@ -215,20 +208,17 @@ def predict():
             storage=[("Wheat", "Silo")]
         )
 
-    return render_template('predict.html')
+    return render_template("predict.html")
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('login'))
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
-    app.run(debug=True)
+# --------------- FINAL CLEAN APP RUN (Correct) ----------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
