@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
-# Local fallback for your PC + Render support
+# Render / Local PostgreSQL URL
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://neondb_owner:npg_dgZW6ikeqps2@ep-winter-hill-abxhds7q-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
@@ -29,12 +29,7 @@ class User(UserMixin):
 def get_user_by_username(username):
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    cursor.execute(
-        "SELECT id, username, role FROM users WHERE username = %s",
-        (username,)
-    )
-    
+    cursor.execute("SELECT id, username, role FROM users WHERE username = %s", (username,))
     row = cursor.fetchone()
     conn.close()
 
@@ -48,14 +43,14 @@ def get_user_by_username(username):
 def register_user(username, password, role):
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     hashed_password = generate_password_hash(password)
 
     cursor.execute(
         "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
         (username, hashed_password, role)
     )
-    
+
     conn.commit()
     conn.close()
 
@@ -63,12 +58,11 @@ def register_user(username, password, role):
 def verify_user(username, password):
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     cursor.execute(
         "SELECT id, username, role, password FROM users WHERE username = %s",
         (username,)
     )
-    
     row = cursor.fetchone()
     conn.close()
 

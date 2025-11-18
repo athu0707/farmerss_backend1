@@ -2,10 +2,10 @@ Flask
 Flask-Login
 gunicorn
 joblib
-mysql-connector-python
 pandas
 python-dotenv
 requests
 scikit-learn
 beautifulsoup4
 psycopg2-binary
+werkzeug

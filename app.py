@@ -20,7 +20,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
-# ---------------- USER LOADER (Fixed Decorator) ----------------
+# ---------------- USER LOADER ----------------
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_db_connection()
@@ -34,14 +34,13 @@ def load_user(user_id):
     return None
 
 
-# ----------------- PIB Farmer News Function -----------------
+# ----------------- PIB Farmer News -----------------
 def get_farmer_news():
     url = "https://pib.gov.in/PressReleasePage.aspx"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"PIB News Fetch Error: {e}")
+    except:
         return []
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -81,10 +80,8 @@ def get_weather(city):
 
     try:
         response = requests.get(url)
-        response.raise_for_status()
         return response.json()
-    except Exception as e:
-        print("Weather API Error:", e)
+    except:
         return None
 
 
@@ -106,20 +103,19 @@ def get_crop_price(crop_name, state="haryana", district="gurgaon"):
 
     try:
         response = requests.get(url, params=params)
-        response.raise_for_status()
         data = response.json()
 
         if data.get("total", 0) > 0:
             record = data["records"][0]
-            min_price = float(record.get("min_price", 0)) / 100
-            max_price = float(record.get("max_price", 0)) / 100
-            modal_price = float(record.get("modal_price", 0)) / 100
-            return min_price, max_price, modal_price
+            return (
+                float(record.get("min_price", 0)) / 100,
+                float(record.get("max_price", 0)) / 100,
+                float(record.get("modal_price", 0)) / 100
+            )
+    except:
+        pass
 
-        return None, None, None
-    except Exception as e:
-        print("Price API Error:", e)
-        return None, None, None
+    return None, None, None
 
 
 # ------------------- ROUTES -------------------
@@ -151,7 +147,7 @@ def register():
             flash("Username already exists", "error")
         else:
             register_user(username, password, role)
-            flash("Registration successful! Please log in.", "success")
+            flash("Registration successful!", "success")
             return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -204,8 +200,6 @@ def predict():
             min_price=min_price or "N/A",
             max_price=max_price or "N/A",
             modal_price=modal_price or "N/A",
-            routes=[("Farm A", "Market X", 50, 100)],
-            storage=[("Wheat", "Silo")]
         )
 
     return render_template("predict.html")
@@ -219,6 +213,5 @@ def logout():
     return redirect(url_for("login"))
 
 
-# --------------- FINAL CLEAN APP RUN (Correct) ----------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
