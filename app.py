@@ -20,16 +20,19 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
-@login_manager.user_loader
+@l@login_manager.user_loader
 def load_user(user_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-    user = cursor.fetchone()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, role FROM users WHERE id = %s", (user_id,))
+    row = cursor.fetchone()
     conn.close()
-    if user:
-        return User(id=user['id'], username=user['username'], role=user['role'])
+    if row:
+        id, username, role = row
+        return User(id=id, username=username, role=role)
     return None
+
+
 
 
 # ----------------- PIB Farmer News Function -----------------
